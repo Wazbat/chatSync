@@ -1,0 +1,17 @@
+{
+  "name": "chatSync",
+  "version": "1.0.0",
+  "main": "app.js",
+  "repository": "git@github.com:Wazbat/chatSync.git",
+  "author": "Wazbat",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "discord.js": "^11.5.1",
+    "dotenv": "^8.2.0",
+    "matrix-bot-sdk": "^0.4.1",
+    "node-telegram-bot-api": "^0.40.0"
+  }
+}
