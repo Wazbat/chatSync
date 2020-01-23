@@ -1,5 +1,6 @@
 require('dotenv').config();
-
+const Enmap = require("enmap");
+const channelMap = new Enmap();
 
 // Telegram
 const TeleBot = require('node-telegram-bot-api');
@@ -8,6 +9,7 @@ const telegramBot = new TeleBot(process.env.TELEGRAMBOTKEY, {polling: true});
 const Discord = require('discord.js');
 const discordBot = new Discord.Client();
 discordBot.login(process.env.DISCORDBOTKEY);
+discordBot.on('Ready', () => console.log(`Logged in to discord as ${discordBot.user.tag}`));
 // Matrix
 const MatrixClient = require("matrix-bot-sdk").MatrixClient;
 const AutojoinRoomsMixin = require("matrix-bot-sdk").AutojoinRoomsMixin;
@@ -15,40 +17,77 @@ const matrixBot = new MatrixClient('https://matrix.org', process.env.MATRIXBOTKE
 AutojoinRoomsMixin.setupOnClient(matrixBot);
 
 
-const channelMap = new Map();
-
-let telegramChatId = process.env.TELEGRAMCHATID;
-let discordChannelId = process.env.DISCORDCHANNELID;
-let MATRIX_ROOM_ID = process.env.MATRIXROOMID;
-
 telegramBot.on('message', msg => {
     if (msg.from.is_bot) return;
-    const senderName = msg.from.username || msg.from.first_name;
+    const senderName = msg.from.first_name;
     const text = msg.text;
     if (!text) return;
-    if (/^\/discord \d+$/i.test(text)) {
-        // Command to set the discord channel
-        const discordChannel = discordBot.channels.get(text.substr(9));
-        if (discordChannel) {
-            console.log('Setting channel', discordChannel.id);
-            discordChannelId = discordChannel.id;
-            telegramBot.sendMessage(msg.chat.id, `Paired with discord channel: ${discordChannelId}`);
-            discordChannel.send(`Now paired with telegram chat: ${msg.chat.id}`);
-        } else {
-            console.error(`Nonexistent discord channel: "${text.substr(9)}"`);
-            telegramBot.sendMessage(msg.chat.id, `I'm sorry. I couldn't access any discord channels with that ID`);
+    if (text.startsWith('/')) {
+        // Handle commands
+        const [command, argument] = text.substr(1).split(' ') ;
+        if (!command) return;
+        // TODO Optimise this. A giant switch case isn't very good
+        switch (command) {
+            case 'pair':
+                if (isAuthorised(argument, msg.from.id)) {
+                    pairChannel(argument, msg.chat.id, msg.from.id, 'telegram');
+                    telegramBot.sendMessage(msg.chat.id, `Added this channel to the ${argument} group`);
+                } else {
+                    telegramBot.sendMessage(msg.chat.id, `You're not an admin of that group`);
+                }
+                break;
+            case 'myid':
+                telegramBot.sendMessage(msg.chat.id, `${msg.from.id}`);
+                break;
+            case 'addadmin':
+                const pairIDs = getGroups(msg.chat.id, 'telegram').keyArray();
+                console.log('groups', pairIDs);
+                pairIDs.forEach(pairID => {
+                    addAdmin(pairID, msg.from.id, argument)
+                });
+                break;
+            default:
+                sendMessage('discord', msg.channel.id, {username: msg.author.username, text});
         }
     } else {
         sendMessage('telegram', msg.chat.id, {username: senderName, text});
     }
-
 });
 
 discordBot.on('message', msg => {
     if (msg.author.bot) return;
     const text = msg.cleanContent;
     if (!text) return;
-    sendMessage('discord', {username: msg.author.username, text});
+    if (text.startsWith('/')) {
+        // Handle commands
+        const [command, argument] = text.substr(1).split(' ') ;
+        if (!command) return;
+        // TODO Optimise this. A giant switch case isn't very good
+        switch (command) {
+            case 'pair':
+                if (isAuthorised(argument, msg.author.id)) {
+                    pairChannel(argument, msg.channel.id, msg.author.id,'discord');
+                    msg.channel.send(`Added this channel to the ${argument} group`);
+                } else {
+                    msg.reply('No');
+                }
+                break;
+            case 'myid':
+                msg.channel.send(msg.author.id);
+                break;
+            case 'addadmin':
+                const pairIDs = getGroups(msg.channel.id, 'discord').keyArray();
+                console.log('groups', pairIDs);
+                pairIDs.forEach(pairID => {
+                    addAdmin(pairID, msg.author.id, argument)
+                });
+                break;
+            default:
+                sendMessage('discord', msg.channel.id, {username: msg.author.username, text});
+        }
+    } else {
+        sendMessage('discord', msg.channel.id, {username: msg.author.username, text});
+    }
 });
 
 matrixBot.on('room.message', (roomId, event) => {
@@ -56,13 +95,41 @@ matrixBot.on('room.message', (roomId, event) => {
    console.log('Matrix content', event.content)
 });
 
-async function sendMessage(source, chatId, payload) {
-    if (!payload.username) return console.error('Emtpy username');
-    if (!payload.text) return console.error('Emtpy username');
+function sendMessage(source, chatId, payload) {
+    const channels = channelMap.filterArray(elem => elem[source].includes(chatId));
+    if (!channels.length) return {error: 'Channel not paired with anything'};
+    if (!payload.username) return console.error('Empty username');
+    if (!payload.text) return console.error('Empty message');
     let sourceName = getSourceName(source);
-    if (source !== 'telegram') telegramBot.sendMessage(telegramChatId, `${sourceName} *${payload.username}*: ${payload.text}`);
-    if (source !== 'discord') discordBot.channels.get(discordChannelId).send(`${sourceName} **${payload.username}**: ${payload.text}`);
-    // if (source !== 'matrix') matrixBot.sendMessage(MATRIX_ROOM_ID, `${sourceName} **${payload.username}**: ${payload.text}`);
+    channels.forEach(group => {
+        if (source !== 'telegram' && group.telegram) group.telegram.forEach(id => telegramBot.sendMessage(id, `${sourceName} *${payload.username}*: ${payload.text}`));
+        if (source !== 'discord' && group.discord) group.discord.forEach(id => discordBot.channels.get(id).send(`${sourceName} **${payload.username}**: ${payload.text}`));
+        if (source !== 'matrix' && group.matrix) group.matrix.forEach(id => matrixBot.sendMessage(id, `${sourceName} **${payload.username}**: ${payload.text}`));
+    });
+}
+function pairChannel(pairID, channelId, adminId, source) {
+    console.log({pairID, channelId, source});
+    // Check or create a group exists with this ID
+    const channels = channelMap.ensure(pairID, {admins: [adminId.toString()]});
+    if (!isAuthorised(pairID, adminId)) return {error: `Not an admin of the channel group. Valid IDs: ${channels.admins.join(', ')}`};
+    channelMap.ensure(pairID, [], source);
+    channelMap.pushIn(pairID, source, channelId);
+}
+function isAuthorised(pairID, adminId) {
+    const channels = channelMap.get(pairID);
+    // If that pairID hasn't be used yet, return true
+    if (!channels) return true;
+    return channels.admins.includes(adminId.toString());
+}
+function unpairChannel(pairID, channelId, adminId) {
+    // TODO Implement this
+}
+function addAdmin(pairID, adminId, newadminId) {
+    if (!isAuthorised(pairID, adminId.toString())) return {error: `You're not an admin of the channel group`};
+    channelMap.pushIn(pairID, 'admins', newadminId.toString());
+}
+function getGroups(channelID, source) {
+    return channelMap.filter(elem => elem[source].includes(channelID));
 }
 function getSourceName(source) {
     switch (source) {
@@ -77,8 +144,3 @@ function getSourceName(source) {
     }
 }
 
-function discordPair(channelID, sourceID, source) {
-    const channel = discordBot.channels.get(channelID);
-    if (!channel) return {error: 'No channel with that ID'}
-    channel.send(`Do you want to pair with ${sourceID}`)
-}

@@ -390,6 +390,13 @@ end-of-stream@^1.1.0:
   dependencies:
     once "^1.4.0"
 
+enmap@^5.2.4:
+  version "5.2.4"
+  resolved "https://registry.yarnpkg.com/enmap/-/enmap-5.2.4.tgz#a4294299ec6f7b0143aadc09a17f5a8ef84510e1"
+  integrity sha512-YulKPmB3t08i1aBDBDgEew9gAWYWXVuGe8S3DLYRQ+E0FoVxTTzo2iSfcEmUX9DRLuKLDMRLRcbRqX5J0z55Uw==
+  dependencies:
+    lodash "^4.17.15"
+
 entities@^1.1.1:
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/entities/-/entities-1.1.2.tgz#bdfa735299664dfafd34529ed4f8522a275fea56"
