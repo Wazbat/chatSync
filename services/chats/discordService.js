@@ -49,16 +49,16 @@ class DiscordService {
         }
         if(!guild) throw new Error(`Unable to find guild with ID: ${guildID}`);
         if(!guild.available) throw new Error(`Guild not available ID: ${guildID}`);
-        const textChannels = guild.channels.map((channel, key) => ({
+        const channels = guild.channels.map((channel, key) => ({
             key,
             name: channel.name,
             type: channel.type
-        })).filter((channel => channel.type === 'text'));
+        }));
         return {
             id: guild.id,
             icon: guild.icon,
             memberCount: guild.memberCount,
-            textChannels
+            channels
         }
 
     }

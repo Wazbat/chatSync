@@ -48,9 +48,13 @@ class MainService {
     }
 
     async handleMessage(source, chatId, payload) {
+        console.log(`Handling message from: ${source}, chat ID: ${chatId}`);
         // TODO Implement caching to avoid excess reads to firestore
         const querySnapshot = await firestore.collection('channelMaps').where(source, 'array-contains', chatId).get();
-        if (!querySnapshot.length) return {error: 'Channel not paired with anything'};
+        if (!querySnapshot.length) {
+            console.log('Channel not paired with anything')
+        };
+        console.log(`Got ${querySnapshot.length} groups for message`);
         querySnapshot.forEach(doc => {
            const group = doc.data();
             if (group.discord) group.discord.forEach(id => {if (id !== chatId) discordService.sendMessage(id, source, payload.username, payload.text)});
