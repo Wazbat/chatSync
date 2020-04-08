@@ -26,8 +26,8 @@ fastify.get('/server/:id', async (request, reply) => {
 
 fastify.get('/_ah/warmup', (req, res) => {
     console.log('Got warmup request');
-    return { message: 'Warmup got' }
-})
+    res.code(200).send({status: 'ok'});
+});
 
 // Run the server!
 const start = async () => {
