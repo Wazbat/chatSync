@@ -1,5 +1,5 @@
 steps:
   - name: 'gcr.io/cloud-builders/yarn'
-    args: ['install']
+    args: ['install', '--ignore-engines']
   - name: 'gcr.io/cloud-builders/gcloud'
     args: ['app', 'deploy', 'app.yaml', '-v', '$BRANCH_NAME', '--set-env-vars', 'DISCORDKEYPATH=${_DISCORDKEYPATH},TELEGRAMKEYPATH=${_TELEGRAMKEYPATH},MATRIXKEYPATH=${_MATRIXKEYPATH}']
