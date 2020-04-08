@@ -7,25 +7,36 @@ const secretService = require('./secretService');
 
 class MainService {
     async init() {
-        const [discordToken, telegramToken, matrixToken] = await Promise.all([
-            secretService.getSecret('projects/743360412515/secrets/discord_key'),
-            secretService.getSecret('projects/743360412515/secrets/telegram_key'),
-            secretService.getSecret('projects/743360412515/secrets/matrix_key')
-        ]);
+        let discordToken;
+        let telegramToken;
+        let matrixToken;
+        try {
+            [discordToken, telegramToken, matrixToken] = await Promise.all([
+                secretService.getSecret('projects/743360412515/secrets/discord_key'),
+                secretService.getSecret('projects/743360412515/secrets/telegram_key'),
+                // secretService.getSecret('projects/743360412515/secrets/matrix_key')
+            ]);
+        } catch (e) {
+            console.error('Error reading credentials');
+            throw e;
+        }
+
         try {
             await Promise.all([
                 discordService.init(discordToken),
                 telegramService.init(telegramToken),
-                matrixService.init(matrixToken)
+               // matrixService.init(matrixToken)
             ]);
         } catch (e) {
             console.error('Error starting chat clients');
-            console.error(e);
+            throw e;
+
         }
         try {
             this.registerListeners();
         } catch (e) {
-            console.error(`Error adding listeners`)
+            console.error(`Error adding listeners`);
+            throw e;
         }
 
     }
@@ -33,7 +44,7 @@ class MainService {
     registerListeners() {
         discordService.registerMessageHandler(this.handleMessage);
         telegramService.registerMessageHandler(this.handleMessage);
-        matrixService.registerMessageHandler(this.handleMessage);
+        // matrixService.registerMessageHandler(this.handleMessage);
     }
 
     async handleMessage(source, chatId, payload) {
@@ -44,7 +55,7 @@ class MainService {
            const group = doc.data();
             if (group.discord) group.discord.forEach(id => {if (id !== chatId) discordService.sendMessage(id, source, payload.username, payload.text)});
             if (group.telegram) group.telegram.forEach(id => {if (id !== chatId) telegramService.sendMessage(id, source, payload.username, payload.text)});
-            if (group.matrix) group.matrix.forEach(id => {if (id!== chatId) matrixService.sendMessage(id, source, payload.username, payload.text)});
+            // if (group.matrix) group.matrix.forEach(id => {if (id!== chatId) matrixService.sendMessage(id, source, payload.username, payload.text)});
         });
     }
 
