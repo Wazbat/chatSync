@@ -8,9 +8,9 @@ const secretService = require('./secretService');
 class MainService {
     async init() {
         const [discordToken, telegramToken, matrixToken] = await Promise.all([
-            secretService.getSecret(process.env.DISCORDKEYPATH),
-            secretService.getSecret(process.env.TELEGRAMKEYPATH),
-            secretService.getSecret(process.env.MATRIXKEYPATH)
+            secretService.getSecret('projects/743360412515/secrets/discord_key'),
+            secretService.getSecret('projects/743360412515/secrets/telegram_key'),
+            secretService.getSecret('projects/743360412515/secrets/matrix_key')
         ]);
         try {
             await Promise.all([
