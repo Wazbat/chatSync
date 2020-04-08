@@ -6,11 +6,10 @@ class DiscordService {
 
     }
     init(token) {
-        if (this.ready) return this.ready;
-        this.ready = new Promise((resolve, reject) => {
+        return new Promise((resolve, reject) => {
             try {
                 this.client.on('ready', () => {
-                    console.log(`Logged in to discord as ${discordBot.user.tag}`);
+                    console.log(`Logged in to discord as ${this.client.user.tag}`);
                     resolve();
                 });
                 this.client.login(token);
@@ -18,8 +17,6 @@ class DiscordService {
                 reject(e)
             }
         });
-        return this.ready;
-
     }
     sendMessage(channelID, prefix, username, content) {
         const channel = this.client.channels.get(channelID);

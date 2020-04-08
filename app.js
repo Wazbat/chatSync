@@ -13,7 +13,7 @@ fastify.get('/', async (request, reply) => {
     return { hello: 'world' }
 });
 fastify.get('/server/:id', async (request, reply) => {
-    await discordService.ready;
+    if (!discordService.client.readyAt) return {error: 'discord service not live'}
     let data;
     try {
       data = discordService.getGuildData(request.params.id);
