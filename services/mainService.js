@@ -57,9 +57,9 @@ class MainService {
         console.log(`Got ${querySnapshot.length} groups for message`);
         querySnapshot.forEach(doc => {
            const group = doc.data();
-            if (group.discord) group.discord.forEach(id => {if (id !== chatId) discordService.sendMessage(id, source, payload.username, payload.text)});
-            if (group.telegram) group.telegram.forEach(id => {if (id !== chatId) telegramService.sendMessage(id, source, payload.username, payload.text)});
-            // if (group.matrix) group.matrix.forEach(id => {if (id!== chatId) matrixService.sendMessage(id, source, payload.username, payload.text)});
+            if (group.discord) group.discord.forEach(id => { try { if (id !== chatId) discordService.sendMessage(id, source, payload.username, payload.text) } catch (e) {console.error(`Failed to send discord message: ${e.message}`)}});
+            if (group.telegram) group.telegram.forEach(id => { try { if (id !== chatId) telegramService.sendMessage(id, source, payload.username, payload.text) } catch (e) {console.error(`Failed to send telegram message: ${e.message}`)}});
+            if (group.matrix) group.telegram.forEach(id => { try { if (id !== chatId) matrixService.sendMessage(id, source, payload.username, payload.text)} catch (e) {console.error(`Failed to send matrix message: ${e.message}`)}});
         });
     }
 
