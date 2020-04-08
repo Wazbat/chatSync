@@ -12,9 +12,9 @@ class MainService {
         let matrixToken;
         try {
             [discordToken, telegramToken, matrixToken] = await Promise.all([
-                secretService.getSecret('projects/743360412515/secrets/discord_key'),
-                secretService.getSecret('projects/743360412515/secrets/telegram_key'),
-                // secretService.getSecret('projects/743360412515/secrets/matrix_key')
+                secretService.getSecret('projects/743360412515/secrets/discord_key/versions/latest'),
+                secretService.getSecret('projects/743360412515/secrets/telegram_key/versions/latest'),
+                secretService.getSecret('projects/743360412515/secrets/matrix_key/versions/latest')
             ]);
         } catch (e) {
             console.error('Error reading credentials');
