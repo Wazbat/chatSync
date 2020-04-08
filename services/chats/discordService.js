@@ -3,9 +3,11 @@ const Discord = require('discord.js');
 class DiscordService {
     constructor() {
         this.client = new Discord.Client();
+
     }
     init(token) {
-        return new Promise((resolve, reject) => {
+        if (this.ready) return this.ready;
+        this.ready = new Promise((resolve, reject) => {
             try {
                 this.client.on('ready', () => {
                     console.log(`Logged in to discord as ${discordBot.user.tag}`);
@@ -15,8 +17,8 @@ class DiscordService {
             } catch (e) {
                 reject(e)
             }
-        })
-
+        });
+        return this.ready;
 
     }
     sendMessage(channelID, prefix, username, content) {

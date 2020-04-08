@@ -1,15 +1,27 @@
 require('@google-cloud/debug-agent').start();
-
+console.log('Starting new instance!');
 const syncService = require('./services/mainService');
+const discordService = require('./services/chats/discordService');
 
 syncService.init();
 
-// Require the framework and instantiate it
-const fastify = require('fastify')({ logger: true })
+
+const fastify = require('fastify')();
 
 // Declare a route
 fastify.get('/', async (request, reply) => {
     return { hello: 'world' }
+});
+fastify.get('/server/:id', async (request, reply) => {
+    await discordService.ready;
+    let data;
+    try {
+      data = discordService.getGuildData(request.params.id);
+    } catch (e) {
+        console.error(e);
+        return e.message || e;
+    }
+    return data;
 });
 
 fastify.get('/_ah/warmup', (req, res) => {
