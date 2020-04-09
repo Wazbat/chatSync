@@ -52,8 +52,8 @@ class MainService {
     async handleMessage(source, chatId, payload) {
         console.log(`Handling message from: ${source}, chat ID: ${chatId}`);
         const groups = databseService.getGroups(source, chatId);
-        if (!groups.length) return console.log('Channel not paired with anything');
         console.log(`Got ${groups.length} groups for message`);
+        if (!groups.length) return console.log('Channel not paired with anything');
         groups.forEach(group => {
             if (group.discord) group.discord.forEach(id => { try { if (id !== chatId) discordService.sendMessage(id, source, payload.username, payload.text) } catch (e) {console.error(`Failed to send discord message: ${e.message}`)}});
             if (group.telegram) group.telegram.forEach(id => { try { if (id !== chatId) telegramService.sendMessage(id, source, payload.username, payload.text) } catch (e) {console.error(`Failed to send telegram message: ${e.message}`)}});

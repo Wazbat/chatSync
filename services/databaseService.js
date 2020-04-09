@@ -11,8 +11,9 @@ class DatabaseService {
             docs.forEach(doc =>{
                     const group = doc.data();
                     console.log(`Pushing group ${JSON.stringify(group)}`);
-                    groups.push(group)
+                    groups.push({...group})
             });
+            console.log(`Returning ${JSON.stringify(groups)}`)
             return groups;
         } catch (e) {
             console.error(`Unable to get channel maps for source: ${source} with id: ${chatId}`);
