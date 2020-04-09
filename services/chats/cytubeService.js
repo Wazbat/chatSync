@@ -43,9 +43,9 @@ class CytubeService {
                         })
                     });
                 });
-                console.log(`Logged into all cytube channels. ${Object.keys(this.connections).length} clients created`);
                 // TODO Handle things if one server fails
                 await Promise.all(connectPromises);
+                console.log(`Logged into all cytube channels. ${Object.keys(this.connections).length} clients created`);
                 initresolve();
             } catch (e) {
                 initreject(e);
