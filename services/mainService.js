@@ -51,7 +51,7 @@ class MainService {
 
     async handleMessage(source, chatId, payload) {
         console.log(`Handling message from: ${source}, chat ID: ${chatId}`);
-        const groups = databseService.getGroups(source, chatId);
+        const groups = await databseService.getGroups(source, chatId);
         console.log(`Got ${groups.length} groups for message`);
         if (!groups.length) return console.log('Channel not paired with anything');
         groups.forEach(group => {

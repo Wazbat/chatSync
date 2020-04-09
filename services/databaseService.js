@@ -7,13 +7,9 @@ class DatabaseService {
             const docs = await firestore.collection('channelMaps').where(source, 'array-contains', chatId.toString()).get();
             const groups = [];
             // For some reason I can't use .map on these documents
-            console.log(`Got ${docs.size} groups for chat source ${source} ID: ${chatId}`);
             docs.forEach(doc =>{
-                    const group = doc.data();
-                    console.log(`Pushing group ${JSON.stringify(group)}`);
-                    groups.push({...group})
+                    groups.push(doc.data())
             });
-            console.log(`Returning ${JSON.stringify(groups)}`)
             return groups;
         } catch (e) {
             console.error(`Unable to get channel maps for source: ${source} with id: ${chatId}`);
