@@ -12,6 +12,8 @@
     "@google-cloud/debug-agent": "^4.2.2",
     "@google-cloud/firestore": "^3.7.3",
     "@google-cloud/secret-manager": "^2.1.0",
+    "@kikinteractive/kik": "^2.2.1",
+    "cytube-client": "^1.0.1",
     "discord.js": "^11.5.1",
     "fastify": "^2.13.0",
     "matrix-bot-sdk": "^0.4.1",

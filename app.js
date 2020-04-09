@@ -3,23 +3,27 @@ console.log('Starting new instance!');
 const syncService = require('./services/mainService');
 const discordService = require('./services/chats/discordService');
 
-syncService.init();
+syncService.init().catch(err => {
+    console.error('Error starting sync service');
+    console.error(err);
+});
 
 
 const fastify = require('fastify')();
 
 // Declare a route
 fastify.get('/', async (request, reply) => {
-    return { hello: 'world' }
+    return { status: 'ok' }
 });
 fastify.get('/server/:id', async (request, reply) => {
-    if (!discordService.client.readyAt) return {error: 'discord service not live'}
+    if (!discordService.client.readyAt) return {error: 'discord service not live'};
     let data;
     try {
       data = discordService.getGuildData(request.params.id);
     } catch (e) {
         console.error(e);
-        return e.message || e;
+        // Rework this to work with different codes and errors
+        return {error: e.message || e};
     }
     return data;
 });
