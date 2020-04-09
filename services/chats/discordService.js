@@ -34,7 +34,7 @@ class DiscordService {
                 if (!command) return;
                 message.reply(`You tried to use a command: ${command}`)
             } else {
-                handlefun('discord', message.channel.id, {username: message.author.username, text});
+                handlefun('discord', message.channel.id.toString(), {username: message.author.username, text});
             }
         }))
     }

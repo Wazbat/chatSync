@@ -49,6 +49,13 @@ class MainService {
         cytubeService.registerMessageHandler(this.handleMessage);
     }
 
+    /**
+     *
+     * @param source
+     * @param chatId {string} ID of the chat. ONLY STRING
+     * @param payload
+     * @returns {Promise<void>}
+     */
     async handleMessage(source, chatId, payload) {
         console.log(`Handling message from: ${source}, chat ID: ${chatId} Content: ${payload.text}`);
         const groups = await databseService.getGroups(source, chatId);
