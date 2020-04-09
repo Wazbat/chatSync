@@ -20,7 +20,7 @@ class MainService {
             console.error('Error reading credentials');
             throw e;
         }
-
+        // TODO Handle things if creating just one client fails. Is Promise.allSettled supported on the nodejs12 runtime?
         try {
             await Promise.all([
                 discordService.init(discordToken),
@@ -50,7 +50,7 @@ class MainService {
     }
 
     async handleMessage(source, chatId, payload) {
-        console.log(`Handling message from: ${source}, chat ID: ${chatId}`);
+        console.log(`Handling message from: ${source}, chat ID: ${chatId} Content: ${payload.text}`);
         const groups = await databseService.getGroups(source, chatId);
         console.log(`Got ${groups.length} groups for message`);
         if (!groups.length) return console.log('Channel not paired with anything');

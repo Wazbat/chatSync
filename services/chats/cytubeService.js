@@ -1,38 +1,54 @@
 const cytube = require('cytube-client');
 const databseService = require('../databaseService');
-
+const MAX_RETRIES = 20;
 class CytubeService {
     init() {
-        return new Promise(async (resolve, reject) => {
+        return new Promise(async (initresolve, initreject) => {
             try {
                 const channels = await databseService.getCytubeChannels();
                 console.log(`Registering cytube listeners and handlers for ${channels.length} channels`);
                 this.connections = {};
-                channels.forEach(channel => {
-                    cytube.connect(channel, (err, client) => {
-                        if (err) {
-                            console.error(`Cytube error for channel: ${channel}`);
-                            console.error(err);
-                            return;
-                        }
-                        console.log(`Pushing conection for channel: ${channel}`)
-                        this.connections[channel] = client;
-                        client.socket.emit('login', {name: 'chatSync'});
-                        client.socket.on('login', data => {
-                            if (data.success === true) {
-                                console.log(`Logged in to cytube channel ${channel}`);
-
-                            } else {
-                                console.error(`Error logging in to cytube channel: ${channel}`);
-                                console.error(data);
+                const connectPromises = channels.map(channel => {
+                    return new Promise((resolve, reject) => {
+                        cytube.connect(channel, (err, client) => {
+                            if (err) {
+                                console.error(`Cytube error for channel: ${channel}`);
+                                console.error(err);
+                                reject();
                             }
+                            console.log(`Pushing conection for channel: ${channel}`);
+                            this.connections[channel] = client;
+                            const login = () => {
+                                client.socket.emit('login', {name: 'chatSync'});
+                            };
+                            login();
+                            let retries = 0;
+                            client.socket.on('login', data => {
+                                if (data.success === true) {
+                                    console.log(`Logged in to cytube channel ${channel}`);
+                                    resolve();
+                                } else {
+                                    console.error(`Error logging in to cytube channel: ${channel}`);
+                                    console.error(data);
+                                    if(retries < MAX_RETRIES) {
+                                        // Try to login again after a minute
+                                        setTimeout(login, 60000);
+                                    } else {
+                                        console.error(`Failed to login to cytube after ${MAX_RETRIES} retries`);
+                                        reject(data);
+                                    }
+
+                                }
+                            })
                         })
-                    })
+                    });
                 });
-                console.log(`Logged into cytube channels. ${Object.keys(this.connections).length} clients created`);
-                resolve();
+                console.log(`Logged into all cytube channels. ${Object.keys(this.connections).length} clients created`);
+                // TODO Handle things if one server fails
+                await Promise.all(connectPromises);
+                initresolve();
             } catch (e) {
-                reject(e);
+                initreject(e);
             }
         })
 
@@ -51,7 +67,7 @@ class CytubeService {
 
     };
     async registerMessageHandler(handlefun) {
-        console.log('Regitering cytube handlers');
+        console.log(`Registering cytube handers for ${Object.entries(this.connections).length} connections`);
         // TODO Fix this
         Object.entries(this.connections).forEach(e => {
             const [channel, connection] = e;
