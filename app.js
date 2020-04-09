@@ -1,3 +1,4 @@
+// TODO Fix cloud debug so I can actually use it instead of relying on logging
 require('@google-cloud/debug-agent').start();
 console.log('Starting new instance!');
 const syncService = require('./services/mainService');
