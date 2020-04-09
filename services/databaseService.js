@@ -16,9 +16,14 @@ class DatabaseService {
         try {
             // Figure out how to filter by non empty arrays so I don't have to query every single group
             const docs =  await firestore.collection('channelMaps').get();
-
-            const flattened =  docs.map(doc => doc.data()).map(data => data.cytube && Array.isArray(data.cytube) ? data.cytube : []).flat();
-            const uniqueSet = new Set(flattened);
+            const channels = [];
+            // For some reason I can't use .map on these documents
+            docs.forEach(doc => {
+                const data = doc.data();
+                const cytubeChannels = Array.isArray(data.cytube) ? data.cytube : [];
+                channels.concat(cytubeChannels);
+            });
+            const uniqueSet = new Set(channels);
             return [...uniqueSet];
         } catch (e) {
             console.error('Error mapping cytube channels');
