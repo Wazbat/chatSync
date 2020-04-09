@@ -5,7 +5,6 @@ class CytubeService {
     init() {
         return new Promise(async (resolve, reject) => {
             try {
-                console.log(`Cytube does not require init`);
                 const channels = await databseService.getCytubeChannels();
                 console.log(`Registering cytube listeners and handlers for ${channels.length} channels`);
                 this.connections = {};
