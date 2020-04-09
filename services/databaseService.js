@@ -5,7 +5,11 @@ class DatabaseService {
     async getGroups(source, chatId) {
         try {
             const docs = await firestore.collection('channelMaps').where(source, 'array-contains', chatId).get();
-            return docs.map(doc => doc.data());
+            const groups = [];
+            docs.forEach(doc =>
+                groups.push(doc.data())
+            );
+            return groups;
         } catch (e) {
             console.error(`Unable to get channel maps for source: ${source} with id: ${chatId}`);
             console.error(e);

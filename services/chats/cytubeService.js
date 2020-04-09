@@ -50,10 +50,13 @@ class CytubeService {
     };
     async registerMessageHandler(handlefun) {
         for (const [channel, connection] of Object.entries(this.connections)) {
+            console.log(`Registering handlers for cytube channel: ${channel}`)
             connection.on('chatMsg', (data) => {
+                console.log(`Got message from cytube ${JSON.stringify(data)}`)
                 handlefun('cytube', channel, {username: data.username, text: data.msg})
             });
             connection.on('changeMedia', (data) => {
+                console.log(`Got media change from cytube ${JSON.stringify(data)}`)
                 handlefun('cytube', channel, {username: 'Now playing', text: data.title})
             });
         }
