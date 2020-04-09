@@ -5,7 +5,6 @@ class telegramService {
     init(token) {
         return new Promise((resolve, reject) => {
             try {
-                console.log(`Logging in to telegram with token: ${token}`);
                 this.client = new TeleBot(token, {polling: true});
                 console.log(`Telegram Bot live`);
                 resolve();
