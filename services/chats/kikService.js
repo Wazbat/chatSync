@@ -23,7 +23,7 @@ class KikService {
 
     }
     sendMessage(channelID, prefix, username, content) {
-        // I won't be able to use this. The bot will get a 403 error if I try to respond outside of a two minute window
+        // I won't be able to use this. The bot will get a 403 error if I try to send a message to a group longer than 2 minutes after the bot was mentioned
 
     };
     registerMessageHandler(handlefun) {
@@ -34,8 +34,6 @@ class KikService {
             if (message.chatType !== 'public') return;
             const user = await this.client.getUserProfile(message.from);
 
-            console.log('Matrix sender', message);
-            console.log('Matrix content', message.body);
             // Consider also using user.displayName or user.firstName
             handlefun('kik', message.chatId, {username: user.username, profilePicUrl: user.profilePicUrl, text: message.body});
         })

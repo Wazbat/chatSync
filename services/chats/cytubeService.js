@@ -1,12 +1,14 @@
 const cytube = require('cytube-client');
 const databseService = require('../databaseService');
 const MAX_RETRIES = 20;
+const USERNAME = 'chatSync';
 class CytubeService {
     init() {
+        // TODO Implement a way to dynamically login and logout (.close) from channels when a subscription is added or removed
         return new Promise(async (initresolve, initreject) => {
             try {
                 const channels = await databseService.getCytubeChannels();
-                console.log(`Registering cytube listeners and handlers for ${channels.length} channels`);
+                console.log(`Registering cytube listeners for ${channels.length} channels`);
                 this.connections = {};
                 const connectPromises = channels.map(channel => {
                     return new Promise((resolve, reject) => {
@@ -18,19 +20,20 @@ class CytubeService {
                             }
                             console.log(`Pushing conection for channel: ${channel}`);
                             this.connections[channel] = client;
+                            let retries = 0;
                             const login = () => {
-                                client.socket.emit('login', {name: 'chatSync'});
+                                console.log(`Logging in to ${channel}, ${retries} retries`);
+                                client.socket.emit('login', {name: USERNAME});
                             };
                             login();
-                            let retries = 0;
                             client.socket.on('login', data => {
                                 if (data.success === true) {
                                     console.log(`Logged in to cytube channel ${channel}`);
                                     resolve();
-                                } else {
-                                    console.error(`Error logging in to cytube channel: ${channel}`);
-                                    console.error(data);
+                                } else if (data.error === 'That name is already in use on this channel.') {
+                                    console.error(`Old client still connected to ${channel}`);
                                     if(retries < MAX_RETRIES) {
+                                        retries++;
                                         // Try to login again after a minute
                                         setTimeout(login, 60000);
                                     } else {
@@ -38,6 +41,10 @@ class CytubeService {
                                         reject(data);
                                     }
 
+                                } else {
+                                    console.error(`Error connecting to cytube channel ${channel}`);
+                                    console.error(JSON.stringify(data));
+                                    reject(data);
                                 }
                             })
                         })
@@ -68,16 +75,14 @@ class CytubeService {
     };
     async registerMessageHandler(handlefun) {
         console.log(`Registering cytube handers for ${Object.entries(this.connections).length} connections`);
-        // TODO Fix this
         Object.entries(this.connections).forEach(e => {
             const [channel, connection] = e;
-            console.log(`Registering handlers for cytube channel: ${channel}`)
+            console.log(`Registering handlers for cytube channel: ${channel}`);
             connection.on('chatMsg', (data) => {
-                console.log(`Got message from cytube ${JSON.stringify(data)}`)
+                if (data.username === USERNAME) return;
                 handlefun('cytube', channel, {username: data.username, text: data.msg})
             });
             connection.on('changeMedia', (data) => {
-                console.log(`Got media change from cytube ${JSON.stringify(data)}`);
                 handlefun('cytube', channel, {username: 'Now playing', text: data.title})
             });
         })

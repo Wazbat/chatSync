@@ -1,5 +1,5 @@
-const MatrixClient = require("matrix-bot-sdk").MatrixClient;
-const AutojoinRoomsMixin = require("matrix-bot-sdk").AutojoinRoomsMixin;
+const MatrixClient = require('matrix-bot-sdk').MatrixClient;
+const AutojoinRoomsMixin = require('matrix-bot-sdk').AutojoinRoomsMixin;
 
 class MatrixService {
     init(token) {
