@@ -31,13 +31,13 @@ class CytubeService {
                                     console.log(`Logged in to cytube channel ${channel}`);
                                     resolve();
                                 } else if (data.error === 'That name is already in use on this channel.') {
-                                    console.error(`Old client still connected to ${channel}`);
                                     if(retries < MAX_RETRIES) {
+                                        console.error(`Old client still connected to ${channel}, retrying`);
                                         retries++;
                                         // Try to login again after a minute
                                         setTimeout(login, 60000);
                                     } else {
-                                        console.error(`Failed to login to cytube after ${MAX_RETRIES} retries`);
+                                        console.error(`Failed to login to cytube after ${retries} retries`);
                                         reject(data);
                                     }
 
